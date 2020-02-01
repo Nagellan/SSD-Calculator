@@ -27,10 +27,62 @@ class Validator {
     if (!this.strIsValid(str)) throw new Error("Input string is not valid!");
     return str;
   }
+}
 
-  validateExpr(expr) {
-    // TODO
+/** Tree representation of mathematical expression */
+class Expression {
+  constructor() {
+    this.expr = null;
   }
+}
+
+/** Mathematical operation */
+class Operation {
+  constructor(sign="", priority=null) {
+    this.left = null;
+    this.right = null;
+
+    this.getSign = () => sign;
+    this.getPriority = () => priority;
+  }
+
+  do = () => null;
+}
+
+/** Arithmetic sum */
+class Sum extends Operation {
+  constructor() {
+    super("+", 2);
+  }
+
+  do = () => this.left + this.right;
+}
+
+/** Arithmetic subtraction */
+class Sub extends Operation {
+  constructor() {
+    super("-", 2);
+  }
+
+  do = () => this.left - this.right; 
+}
+
+/** Arithmetic multiplication */
+class Mult extends Operation {
+  constructor() {
+    super("*", 1);
+  }
+
+  do = () => this.left * this.right;
+}
+
+/** Arithmetic division */
+class Div extends Operation {
+  constructor() {
+    super("/", 1);
+  }
+
+  do = () => this.left / this.right;
 }
 
 export default new Calculator();
