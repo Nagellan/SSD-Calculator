@@ -1,3 +1,4 @@
+/** Solves mathematical expression with +,-,/,* operations */
 class Calculator {
   constructor() {
     this.parser = new Parser();
@@ -8,6 +9,7 @@ class Calculator {
   }
 }
 
+/** Parses string into expression tree if it's valid */
 class Parser {
   constructor() {
     this.validator = new Validator();
@@ -16,8 +18,28 @@ class Parser {
   parse(str) {
     str = this.validator.validateStr(str);
   }
+
+  makeReversePolish(exprList) {
+    const signIsLower = (token) => !!opStack.length && (/[+-]/.test(token) || ((/[*/]/.test(token) && /[*/]/.test(opStack[opStack.length - 1]))));
+
+    let opStack = [],
+        exprRevPolish = [];
+
+    exprList.forEach(token => {
+      if (!isNaN(token)) exprRevPolish.push(+token);
+      else {
+        while (signIsLower(token)) {
+          exprRevPolish.push(opStack.pop());
+        }
+        opStack.push(token);
+      }
+    });
+
+    return exprRevPolish.concat(opStack.reverse());
+  }
 }
 
+/** Validates the string */
 class Validator {
   strIsValid(str) {
     return /^\s*(\d+(?=\.)\.)?\d+\s*([+\-*/]\s*(\d+(?=\.)\.)?\d+\s*)*$/.test(str);
