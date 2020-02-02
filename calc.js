@@ -2,15 +2,16 @@
 class Calculator {
   constructor() {
     this.parser = new Parser();
+    this.exprTreeBuilder = new ExprTreeBuilder();
   }
 
   solve(str) {
-    const expr = this.parser.parse(str);
-    expr.printTree();
+    const exprList = this.parser.parse(str),
+      exprTree = this.exprTreeBuilder.build(exprList);
   }
 }
 
-/** Parses string into expression tree if it's valid */
+/** Parses string, if it's valid, into list of tokens */
 class Parser {
   constructor() {
     this.validator = new Validator();
@@ -18,13 +19,25 @@ class Parser {
 
   parse(str) {
     str = this.validator.validateStr(str);
-    return this.parseToExpr(str);
+    return str.match(/(\d+(?=\.)\.)?\d+|[+\-*/]/g);
   }
+}
 
-  parseToExpr(str) {
-    const exprList = str.match(/(\d+(?=\.)\.)?\d+|[+\-*/]/g),
-      exprRevPolish = this.makeReversePolish(exprList);
+/** Validates the string */
+class Validator {
+  strIsValid = str =>
+    /^\s*(\d+(?=\.)\.)?\d+\s*([+\-*/]\s*(\d+(?=\.)\.)?\d+\s*)*$/.test(str);
 
+  validateStr(str) {
+    if (!this.strIsValid(str)) throw new Error("Input string is not valid!");
+    return str;
+  }
+}
+
+/** Builds expression tree from the list of parsed tokens */
+class ExprTreeBuilder {
+  build(exprList) {
+    const exprRevPolish = this.makeReversePolish(exprList);
     return this.buildExprTree(exprRevPolish);
   }
 
@@ -81,17 +94,6 @@ class Parser {
   }
 }
 
-/** Validates the string */
-class Validator {
-  strIsValid = str =>
-    /^\s*(\d+(?=\.)\.)?\d+\s*([+\-*/]\s*(\d+(?=\.)\.)?\d+\s*)*$/.test(str);
-
-  validateStr(str) {
-    if (!this.strIsValid(str)) throw new Error("Input string is not valid!");
-    return str;
-  }
-}
-
 /** Tree representation of mathematical expression */
 class Expression {
   constructor() {
@@ -102,7 +104,7 @@ class Expression {
     if (!this.expr) this.expr = node;
     else {
       if (isNaN(parent.right)) node = this.addNode(node, parent.right);
-      
+
       if (!!node) {
         if (isNaN(parent.left)) node = this.addNode(node, parent.left);
 
