@@ -6,6 +6,7 @@ class Calculator {
 
   solve(str) {
     const expr = this.parser.parse(str);
+    expr.printTree();
   }
 }
 
@@ -17,13 +18,24 @@ class Parser {
 
   parse(str) {
     str = this.validator.validateStr(str);
+    return this.parseToExpr(str);
+  }
+
+  parseToExpr(str) {
+    const exprList = str.match(/(\d+(?=\.)\.)?\d+|[+\-*/]/g),
+      exprRevPolish = this.makeReversePolish(exprList);
+
+    return this.buildExprTree(exprRevPolish);
   }
 
   makeReversePolish(exprList) {
-    const signIsLower = (token) => !!opStack.length && (/[+-]/.test(token) || ((/[*/]/.test(token) && /[*/]/.test(opStack[opStack.length - 1]))));
+    const signIsLower = token =>
+      !!opStack.length &&
+      (/[+-]/.test(token) ||
+        (/[*/]/.test(token) && /[*/]/.test(opStack[opStack.length - 1])));
 
     let opStack = [],
-        exprRevPolish = [];
+      exprRevPolish = [];
 
     exprList.forEach(token => {
       if (!isNaN(token)) exprRevPolish.push(+token);
@@ -37,13 +49,42 @@ class Parser {
 
     return exprRevPolish.concat(opStack.reverse());
   }
+
+  buildExprTree(exprRevPolish) {
+    const expr = new Expression();
+
+    exprRevPolish.reverse().forEach(token => {
+      if (!isNaN(token)) expr.addNode(token);
+      else {
+        switch (token) {
+          case "+":
+            expr.addNode(new Sum());
+            break;
+          case "-":
+            expr.addNode(new Sub());
+            break;
+          case "*":
+            expr.addNode(new Mult());
+            break;
+          case "/":
+            expr.addNode(new Div());
+            break;
+          default:
+            throw new Error(
+              "Incorrect sign token in expression tree building!"
+            );
+        }
+      }
+    });
+
+    return expr;
+  }
 }
 
 /** Validates the string */
 class Validator {
-  strIsValid(str) {
-    return /^\s*(\d+(?=\.)\.)?\d+\s*([+\-*/]\s*(\d+(?=\.)\.)?\d+\s*)*$/.test(str);
-  }
+  strIsValid = str =>
+    /^\s*(\d+(?=\.)\.)?\d+\s*([+\-*/]\s*(\d+(?=\.)\.)?\d+\s*)*$/.test(str);
 
   validateStr(str) {
     if (!this.strIsValid(str)) throw new Error("Input string is not valid!");
@@ -56,11 +97,32 @@ class Expression {
   constructor() {
     this.expr = null;
   }
+
+  addNode(node, parent = this.expr) {
+    if (!this.expr) this.expr = node;
+    else {
+      if (isNaN(parent.right)) node = this.addNode(node, parent.right);
+      
+      if (!!node) {
+        if (isNaN(parent.left)) node = this.addNode(node, parent.left);
+
+        if (!parent.right) {
+          parent.right = node;
+          return null;
+        } else if (!parent.left) {
+          parent.left = node;
+          return null;
+        }
+      }
+
+      return node;
+    }
+  }
 }
 
 /** Mathematical operation */
 class Operation {
-  constructor(sign="", priority=null) {
+  constructor(sign = "", priority = null) {
     this.left = null;
     this.right = null;
 
@@ -86,7 +148,7 @@ class Sub extends Operation {
     super("-", 2);
   }
 
-  do = () => this.left - this.right; 
+  do = () => this.left - this.right;
 }
 
 /** Arithmetic multiplication */
