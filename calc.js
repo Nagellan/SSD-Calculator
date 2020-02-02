@@ -3,11 +3,13 @@ class Calculator {
   constructor() {
     this.parser = new Parser();
     this.exprTreeBuilder = new ExprTreeBuilder();
+    this.solver = new Solver();
   }
 
   solve(str) {
     const exprList = this.parser.parse(str),
       exprTree = this.exprTreeBuilder.build(exprList);
+    return this.solver.solve(exprTree.expr);
   }
 }
 
@@ -91,6 +93,17 @@ class ExprTreeBuilder {
     });
 
     return expr;
+  }
+}
+
+/** Finds the solution of the expression tree */
+class Solver {
+  solve(node) {
+    if (!isNaN(node)) return node;
+    if (!isNaN(node.left) && !isNaN(node.right)) return node.do();
+    if (isNaN(node.left)) node.left = this.solve(node.left);
+    if (isNaN(node.right)) node.right = this.solve(node.right);
+    return node.do();
   }
 }
 

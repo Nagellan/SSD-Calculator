@@ -1,3 +1,3 @@
 import calc from './calc.js';
 
-calc.solve(process.argv[2]);
+console.log(calc.solve(process.argv[2]));
