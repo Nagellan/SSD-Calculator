@@ -1,7 +1,7 @@
 const calc = require('./calc.js');
 const assert = require('assert');
 
-if (process.argv[2] !== undefined) {
+if (process.argv[1].slice(-7) === "test.js") {
   console.log("Result: " + calc.solve(process.argv[2]) + "\nLast actions:");
   calc.getLastActions(5).forEach(record => console.log(record));
 } else {
