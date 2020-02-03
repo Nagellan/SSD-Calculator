@@ -28,11 +28,17 @@ class Parser {
 /** Validates the string */
 class Validator {
   strIsValid = str =>
-    /^\s*(\d+(?=\.)\.)?\d+\s*([+\-*/]\s*(\d+(?=\.)\.)?\d+\s*)*$/.test(str);
+    /^\s*-?\s*(\d+(?=\.)\.)?\d+\s*([+\-*/]\s*(\d+(?=\.)\.)?\d+\s*)*$/.test(str);
 
   validateStr(str) {
     if (!this.strIsValid(str)) throw new Error("Input string is not valid!");
+    else if (!str) throw new Error("Input string is empty!");
     return str;
+  }
+
+  validateNode(node) {
+    if (node.getSign() == "/" && node.right == 0) throw new Error("Division on zero!");
+    return node;
   }
 }
 
@@ -98,12 +104,16 @@ class ExprTreeBuilder {
 
 /** Finds the solution of the expression tree */
 class Solver {
+  constructor() {
+    this.validator = new Validator();
+  }
+
   solve(node) {
     if (!isNaN(node)) return node;
-    if (!isNaN(node.left) && !isNaN(node.right)) return node.do();
+    if (!isNaN(node.left) && !isNaN(node.right)) return this.validator.validateNode(node).do();
     if (isNaN(node.left)) node.left = this.solve(node.left);
     if (isNaN(node.right)) node.right = this.solve(node.right);
-    return node.do();
+    return this.validator.validateNode(node).do();
   }
 }
 
@@ -118,13 +128,13 @@ class Expression {
     else {
       if (isNaN(parent.right)) node = this.addNode(node, parent.right);
 
-      if (!!node) {
+      if (node !== null) {
         if (isNaN(parent.left)) node = this.addNode(node, parent.left);
 
-        if (!parent.right) {
+        if (parent.right === null) {
           parent.right = node;
           return null;
-        } else if (!parent.left) {
+        } else if (parent.left === null) {
           parent.left = node;
           return null;
         }
@@ -184,4 +194,4 @@ class Div extends Operation {
   do = () => this.left / this.right;
 }
 
-export default new Calculator();
+module.exports = new Calculator();
