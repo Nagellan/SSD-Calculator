@@ -1,10 +1,11 @@
 const calc = require('./calc.js');
 const assert = require('assert');
 
-
-if (process.argv[2] !== undefined)
-  console.log(calc.solve(process.argv[2]));
-else {
+if (process.argv[2] !== undefined) {
+  console.log("Result: " + calc.solve(process.argv[2]) + "\nLast actions:");
+  calc.getLastActions(5).forEach(record => console.log(record));
+} else {
+  calc.clearHistory();
 
   describe('Correctness of operation priorities:', () => {
     it('\'22.3+1+111/2*12-1\' should return 688.3', () => {
@@ -13,6 +14,20 @@ else {
   
     it('\'2+2*2\'             should return 6', () => {
       assert.equal(calc.solve('2+2*2'), 6);
+    });
+  });
+
+  describe('History of actions:', () => {
+    it('Get last 2 actions:  should return \'2+2*2 = 6,22.3+1+111/2*12-1 = 688.3\'', () => {
+      assert.equal(calc.getLastActions(2).toString(), '2+2*2 = 6,22.3+1+111/2*12-1 = 688.3');
+    });
+
+    it('Get last 10 actions: should return \'2+2*2 = 6,22.3+1+111/2*12-1 = 688.3\'', () => {
+      assert.equal(calc.getLastActions(10).toString(), '2+2*2 = 6,22.3+1+111/2*12-1 = 688.3');
+    });
+
+    it('Get last 0 actions:  should return \'\'', () => {
+      assert.equal(calc.getLastActions(0).toString(), '');
     });
   });
 

@@ -4,12 +4,25 @@ class Calculator {
     this.parser = new Parser();
     this.exprTreeBuilder = new ExprTreeBuilder();
     this.solver = new Solver();
+    this.history = new History();
   }
 
   solve(str) {
     const exprList = this.parser.parse(str),
-      exprTree = this.exprTreeBuilder.build(exprList);
-    return this.solver.solve(exprTree.expr);
+      exprTree = this.exprTreeBuilder.build(exprList),
+      result = this.solver.solve(exprTree.expr);
+
+    this.history.add(exprList.join('') + ' = ' + result);
+
+    return result;
+  }
+
+  getLastActions(num) {
+    return this.history.get().reverse().slice(0, num);
+  }
+
+  clearHistory() {
+    this.history.clear();
   }
 }
 
@@ -25,7 +38,7 @@ class Parser {
   }
 }
 
-/** Validates the string */
+/** Validates the string and expression tree node */
 class Validator {
   strIsValid = str =>
     /^\s*-?\s*(\d+(?=\.)\.)?\d+\s*([+\-*/]\s*(\d+(?=\.)\.)?\d+\s*)*$/.test(str);
@@ -114,6 +127,27 @@ class Solver {
     if (isNaN(node.left)) node.left = this.solve(node.left);
     if (isNaN(node.right)) node.right = this.solve(node.right);
     return this.validator.validateNode(node).do();
+  }
+}
+
+/** Accesses the history of last actions on calculator */
+class History {
+  constructor() {
+    this.fs = require('fs');
+    this.storageFileName = 'history.json';
+  }
+
+  get() {
+    return JSON.parse(this.fs.readFileSync(this.storageFileName));
+  }
+
+  add(record) {
+    const historyList = this.get();
+    this.fs.writeFileSync(this.storageFileName, JSON.stringify(historyList.concat(record)));
+  }
+
+  clear() {
+    this.fs.writeFileSync(this.storageFileName, "[]");
   }
 }
 
